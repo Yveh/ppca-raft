@@ -5,10 +5,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 find_package(Protobuf REQUIRED)
 find_package(grpc REQUIRED)
-
 FILE(GLOB PROTOFILES "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 
-message(${PROTOFILES})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTOFILES})
 MESSAGE(STATUS "CLI SRC " ${PROTO_SRCS} ", CLI HEAD " ${PROTO_HDRS})
 add_library(proto_cli STATIC ${PROTO_SRCS} ${PROTO_HDRS})

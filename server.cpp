@@ -1,72 +1,96 @@
-/*
- *
- * Copyright 2015 gRPC authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-#include <iostream>
 #include <memory>
+#include <iostream>
 #include <string>
+#include <thread>
 
 #include <grpcpp/grpcpp.h>
 
-#ifdef BAZEL_BUILD
-#include "examples/protos/helloworld.grpc.pb.h"
-#else
-#include "helloworld.grpc.pb.h"
-#endif
+#include "protos/raft.grpc.pb.h"
 
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::Status;
-using helloworld::HelloRequest;
-using helloworld::HelloReply;
-using helloworld::Greeter;
 
-// Logic and data behind the server's behavior.
-class GreeterServiceImpl final : public Greeter::Service {
-	Status SayHello(ServerContext* context, const HelloRequest* request,
-					HelloReply* reply) override {
-		std::string prefix("Hello ");
-		reply->set_message(prefix + request->name());
-		return Status::OK;
+class RaftServer {
+public:
+	~RaftServer() {
+		server_->Shutdown();
+		cq_->Shutdown();
 	}
+	void run(std::string ip, std::string port) {
+		std::string server_address = ip + ':' + port;
+		grpc::ServerBuilder builder;
+		builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+		builder.RegisterService(&service_);
+		cq_ = builder.AddCompletionQueue();
+		server_ = builder.BuildAndStart();
+		std::cout << "Server listening on " << server_address << std::endl;
+
+		CallData data = CallData(&service_, cq_.get());
+		new SayHelloCall(&data);
+		//
+
+		HandleRpcs();
+	}
+	void HandleRpcs() {
+		void* tag;
+		bool ok;
+		while (cq_->Next(&tag, &ok)) {
+			GPR_ASSERT(ok);
+			auto proceed = static_cast<std::function<void()>*>(tag);
+			(*proceed)();
+		}
+	}
+private:
+	struct CallData {
+		CallData(RAFT::AsyncService* service, grpc::ServerCompletionQueue* cq)
+				: service_(service), cq_(cq) {}
+		RAFT::AsyncService* service_;
+		grpc::ServerCompletionQueue* cq_;
+	};
+
+	class Call {
+	public:
+		virtual void Proceed() = 0;
+	};
+
+	class SayHelloCall final : public Call {
+	public:
+		explicit SayHelloCall(CallData* data)
+				: data_(data), responder_(&ctx_), status_(PROCESS) {
+			proceed = [&]() {Proceed(); };
+			data_->service_->RequestSayHello(&ctx_, &request_, &responder_, data_->cq_, data_->cq_, &proceed);
+		}
+		void Proceed() {
+			switch (status_) {
+				case PROCESS:
+					new SayHelloCall(data_);
+					status_ = FINISH;
+					reply_.set_message("Hello " + request_.name());
+					responder_.Finish(reply_, grpc::Status::OK, &proceed);
+					break;
+				case FINISH:
+					delete this;
+					break;
+
+			}
+		}
+		std::function<void()> proceed;
+	private:
+		CallData* data_;
+		HelloRequest request_;
+		HelloReply reply_;
+		grpc::ServerContext ctx_;
+		grpc::ServerAsyncResponseWriter<HelloReply> responder_;
+		enum CallStatus {PROCESS, FINISH};
+		CallStatus status_;
+	};
+
+	std::shared_ptr<grpc::Server> server_;
+	std::shared_ptr<grpc::ServerCompletionQueue> cq_;
+	RAFT::AsyncService service_;
 };
 
-void RunServer() {
-	std::string server_address("0.0.0.0:50051");
-	GreeterServiceImpl service;
-
-	ServerBuilder builder;
-	// Listen on the given address without any authentication mechanism.
-	builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-	// Register "service" as the instance through which we'll communicate with
-	// clients. In this case it corresponds to an *synchronous* service.
-	builder.RegisterService(&service);
-	// Finally assemble the server.
-	std::unique_ptr<Server> server(builder.BuildAndStart());
-	std::cout << "Server listening on " << server_address << std::endl;
-
-	// Wait for the server to shutdown. Note that some other thread must be
-	// responsible for shutting down the server for this call to ever return.
-	server->Wait();
-}
-
-int main(int argc, char** argv) {
-	RunServer();
-
+int main() {
+	RaftServer Raft;
+	Raft.run("localhost", "50001");
 	return 0;
 }
+
