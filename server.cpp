@@ -64,6 +64,7 @@ private:
 					new SayHelloCall(data_);
 					status_ = FINISH;
 					reply_.set_message("Hello " + request_.name());
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					responder_.Finish(reply_, grpc::Status::OK, &proceed);
 					break;
 				case FINISH:
