@@ -1,97 +1,74 @@
-#include <memory>
-#include <iostream>
 #include <string>
-#include <thread>
 
-#include <grpcpp/grpcpp.h>
+#include "ServerModule.hpp"
+#include "ClientModule.hpp"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
-#include "protos/raft.grpc.pb.h"
-
-
-class RaftServer {
+class Server {
 public:
-	~RaftServer() {
-		server_->Shutdown();
-		cq_->Shutdown();
-	}
-	void run(std::string ip, std::string port) {
-		std::string server_address = ip + ':' + port;
-		grpc::ServerBuilder builder;
-		builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-		builder.RegisterService(&service_);
-		cq_ = builder.AddCompletionQueue();
-		server_ = builder.BuildAndStart();
-		std::cout << "Server listening on " << server_address << std::endl;
+	Server(const std::string& filename) {
+		std::cout << "read json from " << filename << std::endl;
+		boost::property_tree::ptree root;
+		boost::property_tree::ptree items;
+		boost::property_tree::read_json<boost::property_tree::ptree>(filename, root);
 
-		CallData data = CallData(&service_, cq_.get());
-		new SayHelloCall(&data);
-		//
+		LocalAddress = root.get<std::string>("LocalAddress");
 
-		HandleRpcs();
-	}
-	void HandleRpcs() {
-		void* tag;
-		bool ok;
-		while (cq_->Next(&tag, &ok)) {
-			GPR_ASSERT(ok);
-			auto proceed = static_cast<std::function<void()>*>(tag);
-			(*proceed)();
+		for (auto &&adr : root.get_child("ServerList")) {
+			ServerList.emplace_back(adr.second.get_value<std::string>());
 		}
+
+		ServerList.erase(remove(ServerList.begin(), ServerList.end(), LocalAddress), ServerList.end());
+		std::cout << "LocalAddress : " << LocalAddress << std::endl;
+		for (auto i : ServerList)
+			std::cout << "Server " << i << std::endl;
+
+		Cmodule.Init(ServerList);
+	}
+	void ShutDown() {
+		std::cout << "Shuting down..." << std::endl;
+		Cmodule.ShutDown();
+		Smodule.ShutDown();
+	}
+	~Server() {
+		ShutDown();
+		if (thread_.joinable())
+			thread_.join();
+		if (thread__.joinable())
+			thread__.join();
+	}
+	void StartUp() {
+		std::cout << "Server Start" << std::endl;
+		thread__ = std::thread(&ServerModule::Run, &Smodule, LocalAddress);
+		thread_ = std::thread(&ClientModule::CompleteRpc, &Cmodule);
+	}
+	void dosomething() {
+		for (auto i : ServerList)
+			Cmodule.SayHello(i, "from" + LocalAddress);
 	}
 private:
-	struct CallData {
-		CallData(RAFT::AsyncService* service, grpc::ServerCompletionQueue* cq)
-				: service_(service), cq_(cq) {}
-		RAFT::AsyncService* service_;
-		grpc::ServerCompletionQueue* cq_;
-	};
-
-	class Call {
-	public:
-		virtual void Proceed() = 0;
-	};
-
-	class SayHelloCall final : public Call {
-	public:
-		explicit SayHelloCall(CallData* data)
-				: data_(data), responder_(&ctx_), status_(PROCESS) {
-			proceed = [&]() {Proceed(); };
-			data_->service_->RequestSayHello(&ctx_, &request_, &responder_, data_->cq_, data_->cq_, &proceed);
-		}
-		void Proceed() {
-			switch (status_) {
-				case PROCESS:
-					new SayHelloCall(data_);
-					status_ = FINISH;
-					reply_.set_message("Hello " + request_.name());
-					std::this_thread::sleep_for(std::chrono::milliseconds(50));
-					responder_.Finish(reply_, grpc::Status::OK, &proceed);
-					break;
-				case FINISH:
-					delete this;
-					break;
-
-			}
-		}
-		std::function<void()> proceed;
-	private:
-		CallData* data_;
-		HelloRequest request_;
-		HelloReply reply_;
-		grpc::ServerContext ctx_;
-		grpc::ServerAsyncResponseWriter<HelloReply> responder_;
-		enum CallStatus {PROCESS, FINISH};
-		CallStatus status_;
-	};
-
-	std::shared_ptr<grpc::Server> server_;
-	std::shared_ptr<grpc::ServerCompletionQueue> cq_;
-	RAFT::AsyncService service_;
+	std::string LocalAddress;
+	std::vector<std::string> ServerList;
+	ServerModule Smodule;
+	ClientModule Cmodule;
+	std::thread thread_, thread__;
 };
 
 int main() {
-	RaftServer Raft;
-	Raft.run("localhost", "50001");
+	Server s1("s1.json");
+	Server s2("s2.json");
+	Server s3("s3.json");
+	s1.StartUp();
+	s2.StartUp();
+	s3.StartUp();
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	s1.dosomething();
+	s2.dosomething();
+	s3.dosomething();
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+//	while (1);
+	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	return 0;
 }
-
