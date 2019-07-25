@@ -19,6 +19,7 @@
 
 static const char* RAFT_method_names[] = {
   "/RAFT/SayHello",
+  "/RAFT/RequestVote",
 };
 
 std::unique_ptr< RAFT::Stub> RAFT::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -29,6 +30,7 @@ std::unique_ptr< RAFT::Stub> RAFT::NewStub(const std::shared_ptr< ::grpc::Channe
 
 RAFT::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_SayHello_(RAFT_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_RequestVote_(RAFT_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status RAFT::Stub::SayHello(::grpc::ClientContext* context, const ::HelloRequest& request, ::HelloReply* response) {
@@ -51,18 +53,50 @@ void RAFT::Stub::experimental_async::SayHello(::grpc::ClientContext* context, co
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::HelloReply>::Create(channel_.get(), cq, rpcmethod_SayHello_, context, request, false);
 }
 
+::grpc::Status RAFT::Stub::RequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::RequestVoteReply* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_RequestVote_, context, request, response);
+}
+
+void RAFT::Stub::experimental_async::RequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_RequestVote_, context, request, response, std::move(f));
+}
+
+void RAFT::Stub::experimental_async::RequestVote(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::RequestVoteReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_RequestVote_, context, request, response, std::move(f));
+}
+
+::grpc::ClientAsyncResponseReader< ::RequestVoteReply>* RAFT::Stub::AsyncRequestVoteRaw(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::RequestVoteReply>::Create(channel_.get(), cq, rpcmethod_RequestVote_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::RequestVoteReply>* RAFT::Stub::PrepareAsyncRequestVoteRaw(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::RequestVoteReply>::Create(channel_.get(), cq, rpcmethod_RequestVote_, context, request, false);
+}
+
 RAFT::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       RAFT_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::HelloRequest, ::HelloReply>(
           std::mem_fn(&RAFT::Service::SayHello), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      RAFT_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::RequestVoteRequest, ::RequestVoteReply>(
+          std::mem_fn(&RAFT::Service::RequestVote), this)));
 }
 
 RAFT::Service::~Service() {
 }
 
 ::grpc::Status RAFT::Service::SayHello(::grpc::ServerContext* context, const ::HelloRequest* request, ::HelloReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status RAFT::Service::RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) {
   (void) context;
   (void) request;
   (void) response;

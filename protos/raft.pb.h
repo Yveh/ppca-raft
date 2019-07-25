@@ -41,23 +41,39 @@ struct TableStruct_raft_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::google::protobuf::internal::ParseTable schema[2]
+  static const ::google::protobuf::internal::ParseTable schema[6]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
 };
 void AddDescriptors_raft_2eproto();
+class AppendEntriesReply;
+class AppendEntriesReplyDefaultTypeInternal;
+extern AppendEntriesReplyDefaultTypeInternal _AppendEntriesReply_default_instance_;
+class AppendEntriesRequest;
+class AppendEntriesRequestDefaultTypeInternal;
+extern AppendEntriesRequestDefaultTypeInternal _AppendEntriesRequest_default_instance_;
 class HelloReply;
 class HelloReplyDefaultTypeInternal;
 extern HelloReplyDefaultTypeInternal _HelloReply_default_instance_;
 class HelloRequest;
 class HelloRequestDefaultTypeInternal;
 extern HelloRequestDefaultTypeInternal _HelloRequest_default_instance_;
+class RequestVoteReply;
+class RequestVoteReplyDefaultTypeInternal;
+extern RequestVoteReplyDefaultTypeInternal _RequestVoteReply_default_instance_;
+class RequestVoteRequest;
+class RequestVoteRequestDefaultTypeInternal;
+extern RequestVoteRequestDefaultTypeInternal _RequestVoteRequest_default_instance_;
 namespace google {
 namespace protobuf {
+template<> ::AppendEntriesReply* Arena::CreateMaybeMessage<::AppendEntriesReply>(Arena*);
+template<> ::AppendEntriesRequest* Arena::CreateMaybeMessage<::AppendEntriesRequest>(Arena*);
 template<> ::HelloReply* Arena::CreateMaybeMessage<::HelloReply>(Arena*);
 template<> ::HelloRequest* Arena::CreateMaybeMessage<::HelloRequest>(Arena*);
+template<> ::RequestVoteReply* Arena::CreateMaybeMessage<::RequestVoteReply>(Arena*);
+template<> ::RequestVoteRequest* Arena::CreateMaybeMessage<::RequestVoteRequest>(Arena*);
 }  // namespace protobuf
 }  // namespace google
 
@@ -301,6 +317,556 @@ class HelloReply final :
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_raft_2eproto;
 };
+// -------------------------------------------------------------------
+
+class AppendEntriesRequest final :
+    public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:AppendEntriesRequest) */ {
+ public:
+  AppendEntriesRequest();
+  virtual ~AppendEntriesRequest();
+
+  AppendEntriesRequest(const AppendEntriesRequest& from);
+
+  inline AppendEntriesRequest& operator=(const AppendEntriesRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  AppendEntriesRequest(AppendEntriesRequest&& from) noexcept
+    : AppendEntriesRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline AppendEntriesRequest& operator=(AppendEntriesRequest&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return default_instance().GetDescriptor();
+  }
+  static const AppendEntriesRequest& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const AppendEntriesRequest* internal_default_instance() {
+    return reinterpret_cast<const AppendEntriesRequest*>(
+               &_AppendEntriesRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  void Swap(AppendEntriesRequest* other);
+  friend void swap(AppendEntriesRequest& a, AppendEntriesRequest& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AppendEntriesRequest* New() const final {
+    return CreateMaybeMessage<AppendEntriesRequest>(nullptr);
+  }
+
+  AppendEntriesRequest* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<AppendEntriesRequest>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const AppendEntriesRequest& from);
+  void MergeFrom(const AppendEntriesRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  #if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  static const char* _InternalParse(const char* begin, const char* end, void* object, ::google::protobuf::internal::ParseContext* ctx);
+  ::google::protobuf::internal::ParseFunc _ParseFunc() const final { return _InternalParse; }
+  #else
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  #endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AppendEntriesRequest* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return nullptr;
+  }
+  inline void* MaybeArenaPtr() const {
+    return nullptr;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated string entries = 5;
+  int entries_size() const;
+  void clear_entries();
+  static const int kEntriesFieldNumber = 5;
+  const ::std::string& entries(int index) const;
+  ::std::string* mutable_entries(int index);
+  void set_entries(int index, const ::std::string& value);
+  #if LANG_CXX11
+  void set_entries(int index, ::std::string&& value);
+  #endif
+  void set_entries(int index, const char* value);
+  void set_entries(int index, const char* value, size_t size);
+  ::std::string* add_entries();
+  void add_entries(const ::std::string& value);
+  #if LANG_CXX11
+  void add_entries(::std::string&& value);
+  #endif
+  void add_entries(const char* value);
+  void add_entries(const char* value, size_t size);
+  const ::google::protobuf::RepeatedPtrField<::std::string>& entries() const;
+  ::google::protobuf::RepeatedPtrField<::std::string>* mutable_entries();
+
+  // string leaderId = 2;
+  void clear_leaderid();
+  static const int kLeaderIdFieldNumber = 2;
+  const ::std::string& leaderid() const;
+  void set_leaderid(const ::std::string& value);
+  #if LANG_CXX11
+  void set_leaderid(::std::string&& value);
+  #endif
+  void set_leaderid(const char* value);
+  void set_leaderid(const char* value, size_t size);
+  ::std::string* mutable_leaderid();
+  ::std::string* release_leaderid();
+  void set_allocated_leaderid(::std::string* leaderid);
+
+  // int32 term = 1;
+  void clear_term();
+  static const int kTermFieldNumber = 1;
+  ::google::protobuf::int32 term() const;
+  void set_term(::google::protobuf::int32 value);
+
+  // int32 prevLogIndex = 3;
+  void clear_prevlogindex();
+  static const int kPrevLogIndexFieldNumber = 3;
+  ::google::protobuf::int32 prevlogindex() const;
+  void set_prevlogindex(::google::protobuf::int32 value);
+
+  // int32 prevLogTerm = 4;
+  void clear_prevlogterm();
+  static const int kPrevLogTermFieldNumber = 4;
+  ::google::protobuf::int32 prevlogterm() const;
+  void set_prevlogterm(::google::protobuf::int32 value);
+
+  // int32 leaderCommit = 6;
+  void clear_leadercommit();
+  static const int kLeaderCommitFieldNumber = 6;
+  ::google::protobuf::int32 leadercommit() const;
+  void set_leadercommit(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:AppendEntriesRequest)
+ private:
+  class HasBitSetters;
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField<::std::string> entries_;
+  ::google::protobuf::internal::ArenaStringPtr leaderid_;
+  ::google::protobuf::int32 term_;
+  ::google::protobuf::int32 prevlogindex_;
+  ::google::protobuf::int32 prevlogterm_;
+  ::google::protobuf::int32 leadercommit_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_raft_2eproto;
+};
+// -------------------------------------------------------------------
+
+class AppendEntriesReply final :
+    public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:AppendEntriesReply) */ {
+ public:
+  AppendEntriesReply();
+  virtual ~AppendEntriesReply();
+
+  AppendEntriesReply(const AppendEntriesReply& from);
+
+  inline AppendEntriesReply& operator=(const AppendEntriesReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  AppendEntriesReply(AppendEntriesReply&& from) noexcept
+    : AppendEntriesReply() {
+    *this = ::std::move(from);
+  }
+
+  inline AppendEntriesReply& operator=(AppendEntriesReply&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return default_instance().GetDescriptor();
+  }
+  static const AppendEntriesReply& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const AppendEntriesReply* internal_default_instance() {
+    return reinterpret_cast<const AppendEntriesReply*>(
+               &_AppendEntriesReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  void Swap(AppendEntriesReply* other);
+  friend void swap(AppendEntriesReply& a, AppendEntriesReply& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AppendEntriesReply* New() const final {
+    return CreateMaybeMessage<AppendEntriesReply>(nullptr);
+  }
+
+  AppendEntriesReply* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<AppendEntriesReply>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const AppendEntriesReply& from);
+  void MergeFrom(const AppendEntriesReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  #if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  static const char* _InternalParse(const char* begin, const char* end, void* object, ::google::protobuf::internal::ParseContext* ctx);
+  ::google::protobuf::internal::ParseFunc _ParseFunc() const final { return _InternalParse; }
+  #else
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  #endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AppendEntriesReply* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return nullptr;
+  }
+  inline void* MaybeArenaPtr() const {
+    return nullptr;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // int32 term = 1;
+  void clear_term();
+  static const int kTermFieldNumber = 1;
+  ::google::protobuf::int32 term() const;
+  void set_term(::google::protobuf::int32 value);
+
+  // bool success = 2;
+  void clear_success();
+  static const int kSuccessFieldNumber = 2;
+  bool success() const;
+  void set_success(bool value);
+
+  // @@protoc_insertion_point(class_scope:AppendEntriesReply)
+ private:
+  class HasBitSetters;
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::int32 term_;
+  bool success_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_raft_2eproto;
+};
+// -------------------------------------------------------------------
+
+class RequestVoteRequest final :
+    public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:RequestVoteRequest) */ {
+ public:
+  RequestVoteRequest();
+  virtual ~RequestVoteRequest();
+
+  RequestVoteRequest(const RequestVoteRequest& from);
+
+  inline RequestVoteRequest& operator=(const RequestVoteRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  RequestVoteRequest(RequestVoteRequest&& from) noexcept
+    : RequestVoteRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline RequestVoteRequest& operator=(RequestVoteRequest&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return default_instance().GetDescriptor();
+  }
+  static const RequestVoteRequest& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const RequestVoteRequest* internal_default_instance() {
+    return reinterpret_cast<const RequestVoteRequest*>(
+               &_RequestVoteRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  void Swap(RequestVoteRequest* other);
+  friend void swap(RequestVoteRequest& a, RequestVoteRequest& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline RequestVoteRequest* New() const final {
+    return CreateMaybeMessage<RequestVoteRequest>(nullptr);
+  }
+
+  RequestVoteRequest* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<RequestVoteRequest>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const RequestVoteRequest& from);
+  void MergeFrom(const RequestVoteRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  #if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  static const char* _InternalParse(const char* begin, const char* end, void* object, ::google::protobuf::internal::ParseContext* ctx);
+  ::google::protobuf::internal::ParseFunc _ParseFunc() const final { return _InternalParse; }
+  #else
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  #endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(RequestVoteRequest* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return nullptr;
+  }
+  inline void* MaybeArenaPtr() const {
+    return nullptr;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string candidateId = 2;
+  void clear_candidateid();
+  static const int kCandidateIdFieldNumber = 2;
+  const ::std::string& candidateid() const;
+  void set_candidateid(const ::std::string& value);
+  #if LANG_CXX11
+  void set_candidateid(::std::string&& value);
+  #endif
+  void set_candidateid(const char* value);
+  void set_candidateid(const char* value, size_t size);
+  ::std::string* mutable_candidateid();
+  ::std::string* release_candidateid();
+  void set_allocated_candidateid(::std::string* candidateid);
+
+  // int32 term = 1;
+  void clear_term();
+  static const int kTermFieldNumber = 1;
+  ::google::protobuf::int32 term() const;
+  void set_term(::google::protobuf::int32 value);
+
+  // int32 lastLogIndex = 3;
+  void clear_lastlogindex();
+  static const int kLastLogIndexFieldNumber = 3;
+  ::google::protobuf::int32 lastlogindex() const;
+  void set_lastlogindex(::google::protobuf::int32 value);
+
+  // int32 lastLogTerm = 4;
+  void clear_lastlogterm();
+  static const int kLastLogTermFieldNumber = 4;
+  ::google::protobuf::int32 lastlogterm() const;
+  void set_lastlogterm(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:RequestVoteRequest)
+ private:
+  class HasBitSetters;
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr candidateid_;
+  ::google::protobuf::int32 term_;
+  ::google::protobuf::int32 lastlogindex_;
+  ::google::protobuf::int32 lastlogterm_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_raft_2eproto;
+};
+// -------------------------------------------------------------------
+
+class RequestVoteReply final :
+    public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:RequestVoteReply) */ {
+ public:
+  RequestVoteReply();
+  virtual ~RequestVoteReply();
+
+  RequestVoteReply(const RequestVoteReply& from);
+
+  inline RequestVoteReply& operator=(const RequestVoteReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  RequestVoteReply(RequestVoteReply&& from) noexcept
+    : RequestVoteReply() {
+    *this = ::std::move(from);
+  }
+
+  inline RequestVoteReply& operator=(RequestVoteReply&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return default_instance().GetDescriptor();
+  }
+  static const RequestVoteReply& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const RequestVoteReply* internal_default_instance() {
+    return reinterpret_cast<const RequestVoteReply*>(
+               &_RequestVoteReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    5;
+
+  void Swap(RequestVoteReply* other);
+  friend void swap(RequestVoteReply& a, RequestVoteReply& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline RequestVoteReply* New() const final {
+    return CreateMaybeMessage<RequestVoteReply>(nullptr);
+  }
+
+  RequestVoteReply* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<RequestVoteReply>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const RequestVoteReply& from);
+  void MergeFrom(const RequestVoteReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  #if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  static const char* _InternalParse(const char* begin, const char* end, void* object, ::google::protobuf::internal::ParseContext* ctx);
+  ::google::protobuf::internal::ParseFunc _ParseFunc() const final { return _InternalParse; }
+  #else
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  #endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(RequestVoteReply* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return nullptr;
+  }
+  inline void* MaybeArenaPtr() const {
+    return nullptr;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // int32 term = 1;
+  void clear_term();
+  static const int kTermFieldNumber = 1;
+  ::google::protobuf::int32 term() const;
+  void set_term(::google::protobuf::int32 value);
+
+  // bool voteGranted = 2;
+  void clear_votegranted();
+  static const int kVoteGrantedFieldNumber = 2;
+  bool votegranted() const;
+  void set_votegranted(bool value);
+
+  // @@protoc_insertion_point(class_scope:RequestVoteReply)
+ private:
+  class HasBitSetters;
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::int32 term_;
+  bool votegranted_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_raft_2eproto;
+};
 // ===================================================================
 
 
@@ -422,9 +988,362 @@ inline void HelloReply::set_allocated_message(::std::string* message) {
   // @@protoc_insertion_point(field_set_allocated:HelloReply.message)
 }
 
+// -------------------------------------------------------------------
+
+// AppendEntriesRequest
+
+// int32 term = 1;
+inline void AppendEntriesRequest::clear_term() {
+  term_ = 0;
+}
+inline ::google::protobuf::int32 AppendEntriesRequest::term() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesRequest.term)
+  return term_;
+}
+inline void AppendEntriesRequest::set_term(::google::protobuf::int32 value) {
+  
+  term_ = value;
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.term)
+}
+
+// string leaderId = 2;
+inline void AppendEntriesRequest::clear_leaderid() {
+  leaderid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& AppendEntriesRequest::leaderid() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesRequest.leaderId)
+  return leaderid_.GetNoArena();
+}
+inline void AppendEntriesRequest::set_leaderid(const ::std::string& value) {
+  
+  leaderid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.leaderId)
+}
+#if LANG_CXX11
+inline void AppendEntriesRequest::set_leaderid(::std::string&& value) {
+  
+  leaderid_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:AppendEntriesRequest.leaderId)
+}
+#endif
+inline void AppendEntriesRequest::set_leaderid(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  leaderid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:AppendEntriesRequest.leaderId)
+}
+inline void AppendEntriesRequest::set_leaderid(const char* value, size_t size) {
+  
+  leaderid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:AppendEntriesRequest.leaderId)
+}
+inline ::std::string* AppendEntriesRequest::mutable_leaderid() {
+  
+  // @@protoc_insertion_point(field_mutable:AppendEntriesRequest.leaderId)
+  return leaderid_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* AppendEntriesRequest::release_leaderid() {
+  // @@protoc_insertion_point(field_release:AppendEntriesRequest.leaderId)
+  
+  return leaderid_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void AppendEntriesRequest::set_allocated_leaderid(::std::string* leaderid) {
+  if (leaderid != nullptr) {
+    
+  } else {
+    
+  }
+  leaderid_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), leaderid);
+  // @@protoc_insertion_point(field_set_allocated:AppendEntriesRequest.leaderId)
+}
+
+// int32 prevLogIndex = 3;
+inline void AppendEntriesRequest::clear_prevlogindex() {
+  prevlogindex_ = 0;
+}
+inline ::google::protobuf::int32 AppendEntriesRequest::prevlogindex() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesRequest.prevLogIndex)
+  return prevlogindex_;
+}
+inline void AppendEntriesRequest::set_prevlogindex(::google::protobuf::int32 value) {
+  
+  prevlogindex_ = value;
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.prevLogIndex)
+}
+
+// int32 prevLogTerm = 4;
+inline void AppendEntriesRequest::clear_prevlogterm() {
+  prevlogterm_ = 0;
+}
+inline ::google::protobuf::int32 AppendEntriesRequest::prevlogterm() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesRequest.prevLogTerm)
+  return prevlogterm_;
+}
+inline void AppendEntriesRequest::set_prevlogterm(::google::protobuf::int32 value) {
+  
+  prevlogterm_ = value;
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.prevLogTerm)
+}
+
+// repeated string entries = 5;
+inline int AppendEntriesRequest::entries_size() const {
+  return entries_.size();
+}
+inline void AppendEntriesRequest::clear_entries() {
+  entries_.Clear();
+}
+inline const ::std::string& AppendEntriesRequest::entries(int index) const {
+  // @@protoc_insertion_point(field_get:AppendEntriesRequest.entries)
+  return entries_.Get(index);
+}
+inline ::std::string* AppendEntriesRequest::mutable_entries(int index) {
+  // @@protoc_insertion_point(field_mutable:AppendEntriesRequest.entries)
+  return entries_.Mutable(index);
+}
+inline void AppendEntriesRequest::set_entries(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.entries)
+  entries_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+inline void AppendEntriesRequest::set_entries(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.entries)
+  entries_.Mutable(index)->assign(std::move(value));
+}
+#endif
+inline void AppendEntriesRequest::set_entries(int index, const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  entries_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:AppendEntriesRequest.entries)
+}
+inline void AppendEntriesRequest::set_entries(int index, const char* value, size_t size) {
+  entries_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:AppendEntriesRequest.entries)
+}
+inline ::std::string* AppendEntriesRequest::add_entries() {
+  // @@protoc_insertion_point(field_add_mutable:AppendEntriesRequest.entries)
+  return entries_.Add();
+}
+inline void AppendEntriesRequest::add_entries(const ::std::string& value) {
+  entries_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:AppendEntriesRequest.entries)
+}
+#if LANG_CXX11
+inline void AppendEntriesRequest::add_entries(::std::string&& value) {
+  entries_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:AppendEntriesRequest.entries)
+}
+#endif
+inline void AppendEntriesRequest::add_entries(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  entries_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:AppendEntriesRequest.entries)
+}
+inline void AppendEntriesRequest::add_entries(const char* value, size_t size) {
+  entries_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:AppendEntriesRequest.entries)
+}
+inline const ::google::protobuf::RepeatedPtrField<::std::string>&
+AppendEntriesRequest::entries() const {
+  // @@protoc_insertion_point(field_list:AppendEntriesRequest.entries)
+  return entries_;
+}
+inline ::google::protobuf::RepeatedPtrField<::std::string>*
+AppendEntriesRequest::mutable_entries() {
+  // @@protoc_insertion_point(field_mutable_list:AppendEntriesRequest.entries)
+  return &entries_;
+}
+
+// int32 leaderCommit = 6;
+inline void AppendEntriesRequest::clear_leadercommit() {
+  leadercommit_ = 0;
+}
+inline ::google::protobuf::int32 AppendEntriesRequest::leadercommit() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesRequest.leaderCommit)
+  return leadercommit_;
+}
+inline void AppendEntriesRequest::set_leadercommit(::google::protobuf::int32 value) {
+  
+  leadercommit_ = value;
+  // @@protoc_insertion_point(field_set:AppendEntriesRequest.leaderCommit)
+}
+
+// -------------------------------------------------------------------
+
+// AppendEntriesReply
+
+// int32 term = 1;
+inline void AppendEntriesReply::clear_term() {
+  term_ = 0;
+}
+inline ::google::protobuf::int32 AppendEntriesReply::term() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesReply.term)
+  return term_;
+}
+inline void AppendEntriesReply::set_term(::google::protobuf::int32 value) {
+  
+  term_ = value;
+  // @@protoc_insertion_point(field_set:AppendEntriesReply.term)
+}
+
+// bool success = 2;
+inline void AppendEntriesReply::clear_success() {
+  success_ = false;
+}
+inline bool AppendEntriesReply::success() const {
+  // @@protoc_insertion_point(field_get:AppendEntriesReply.success)
+  return success_;
+}
+inline void AppendEntriesReply::set_success(bool value) {
+  
+  success_ = value;
+  // @@protoc_insertion_point(field_set:AppendEntriesReply.success)
+}
+
+// -------------------------------------------------------------------
+
+// RequestVoteRequest
+
+// int32 term = 1;
+inline void RequestVoteRequest::clear_term() {
+  term_ = 0;
+}
+inline ::google::protobuf::int32 RequestVoteRequest::term() const {
+  // @@protoc_insertion_point(field_get:RequestVoteRequest.term)
+  return term_;
+}
+inline void RequestVoteRequest::set_term(::google::protobuf::int32 value) {
+  
+  term_ = value;
+  // @@protoc_insertion_point(field_set:RequestVoteRequest.term)
+}
+
+// string candidateId = 2;
+inline void RequestVoteRequest::clear_candidateid() {
+  candidateid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& RequestVoteRequest::candidateid() const {
+  // @@protoc_insertion_point(field_get:RequestVoteRequest.candidateId)
+  return candidateid_.GetNoArena();
+}
+inline void RequestVoteRequest::set_candidateid(const ::std::string& value) {
+  
+  candidateid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:RequestVoteRequest.candidateId)
+}
+#if LANG_CXX11
+inline void RequestVoteRequest::set_candidateid(::std::string&& value) {
+  
+  candidateid_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:RequestVoteRequest.candidateId)
+}
+#endif
+inline void RequestVoteRequest::set_candidateid(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  candidateid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:RequestVoteRequest.candidateId)
+}
+inline void RequestVoteRequest::set_candidateid(const char* value, size_t size) {
+  
+  candidateid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:RequestVoteRequest.candidateId)
+}
+inline ::std::string* RequestVoteRequest::mutable_candidateid() {
+  
+  // @@protoc_insertion_point(field_mutable:RequestVoteRequest.candidateId)
+  return candidateid_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* RequestVoteRequest::release_candidateid() {
+  // @@protoc_insertion_point(field_release:RequestVoteRequest.candidateId)
+  
+  return candidateid_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void RequestVoteRequest::set_allocated_candidateid(::std::string* candidateid) {
+  if (candidateid != nullptr) {
+    
+  } else {
+    
+  }
+  candidateid_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), candidateid);
+  // @@protoc_insertion_point(field_set_allocated:RequestVoteRequest.candidateId)
+}
+
+// int32 lastLogIndex = 3;
+inline void RequestVoteRequest::clear_lastlogindex() {
+  lastlogindex_ = 0;
+}
+inline ::google::protobuf::int32 RequestVoteRequest::lastlogindex() const {
+  // @@protoc_insertion_point(field_get:RequestVoteRequest.lastLogIndex)
+  return lastlogindex_;
+}
+inline void RequestVoteRequest::set_lastlogindex(::google::protobuf::int32 value) {
+  
+  lastlogindex_ = value;
+  // @@protoc_insertion_point(field_set:RequestVoteRequest.lastLogIndex)
+}
+
+// int32 lastLogTerm = 4;
+inline void RequestVoteRequest::clear_lastlogterm() {
+  lastlogterm_ = 0;
+}
+inline ::google::protobuf::int32 RequestVoteRequest::lastlogterm() const {
+  // @@protoc_insertion_point(field_get:RequestVoteRequest.lastLogTerm)
+  return lastlogterm_;
+}
+inline void RequestVoteRequest::set_lastlogterm(::google::protobuf::int32 value) {
+  
+  lastlogterm_ = value;
+  // @@protoc_insertion_point(field_set:RequestVoteRequest.lastLogTerm)
+}
+
+// -------------------------------------------------------------------
+
+// RequestVoteReply
+
+// int32 term = 1;
+inline void RequestVoteReply::clear_term() {
+  term_ = 0;
+}
+inline ::google::protobuf::int32 RequestVoteReply::term() const {
+  // @@protoc_insertion_point(field_get:RequestVoteReply.term)
+  return term_;
+}
+inline void RequestVoteReply::set_term(::google::protobuf::int32 value) {
+  
+  term_ = value;
+  // @@protoc_insertion_point(field_set:RequestVoteReply.term)
+}
+
+// bool voteGranted = 2;
+inline void RequestVoteReply::clear_votegranted() {
+  votegranted_ = false;
+}
+inline bool RequestVoteReply::votegranted() const {
+  // @@protoc_insertion_point(field_get:RequestVoteReply.voteGranted)
+  return votegranted_;
+}
+inline void RequestVoteReply::set_votegranted(bool value) {
+  
+  votegranted_ = value;
+  // @@protoc_insertion_point(field_set:RequestVoteReply.voteGranted)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 

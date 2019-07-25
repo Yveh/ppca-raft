@@ -42,16 +42,27 @@ class RAFT final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::HelloReply>> PrepareAsyncSayHello(::grpc::ClientContext* context, const ::HelloRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::HelloReply>>(PrepareAsyncSayHelloRaw(context, request, cq));
     }
+    virtual ::grpc::Status RequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::RequestVoteReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::RequestVoteReply>> AsyncRequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::RequestVoteReply>>(AsyncRequestVoteRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::RequestVoteReply>> PrepareAsyncRequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::RequestVoteReply>>(PrepareAsyncRequestVoteRaw(context, request, cq));
+    }
     class experimental_async_interface {
      public:
       virtual ~experimental_async_interface() {}
       virtual void SayHello(::grpc::ClientContext* context, const ::HelloRequest* request, ::HelloReply* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SayHello(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::HelloReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void RequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void RequestVote(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::RequestVoteReply* response, std::function<void(::grpc::Status)>) = 0;
     };
     virtual class experimental_async_interface* experimental_async() { return nullptr; }
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::HelloReply>* AsyncSayHelloRaw(::grpc::ClientContext* context, const ::HelloRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::HelloReply>* PrepareAsyncSayHelloRaw(::grpc::ClientContext* context, const ::HelloRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::RequestVoteReply>* AsyncRequestVoteRaw(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::RequestVoteReply>* PrepareAsyncRequestVoteRaw(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -63,11 +74,20 @@ class RAFT final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::HelloReply>> PrepareAsyncSayHello(::grpc::ClientContext* context, const ::HelloRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::HelloReply>>(PrepareAsyncSayHelloRaw(context, request, cq));
     }
+    ::grpc::Status RequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::RequestVoteReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::RequestVoteReply>> AsyncRequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::RequestVoteReply>>(AsyncRequestVoteRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::RequestVoteReply>> PrepareAsyncRequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::RequestVoteReply>>(PrepareAsyncRequestVoteRaw(context, request, cq));
+    }
     class experimental_async final :
       public StubInterface::experimental_async_interface {
      public:
       void SayHello(::grpc::ClientContext* context, const ::HelloRequest* request, ::HelloReply* response, std::function<void(::grpc::Status)>) override;
       void SayHello(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::HelloReply* response, std::function<void(::grpc::Status)>) override;
+      void RequestVote(::grpc::ClientContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response, std::function<void(::grpc::Status)>) override;
+      void RequestVote(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::RequestVoteReply* response, std::function<void(::grpc::Status)>) override;
      private:
       friend class Stub;
       explicit experimental_async(Stub* stub): stub_(stub) { }
@@ -81,7 +101,10 @@ class RAFT final {
     class experimental_async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::HelloReply>* AsyncSayHelloRaw(::grpc::ClientContext* context, const ::HelloRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::HelloReply>* PrepareAsyncSayHelloRaw(::grpc::ClientContext* context, const ::HelloRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::RequestVoteReply>* AsyncRequestVoteRaw(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::RequestVoteReply>* PrepareAsyncRequestVoteRaw(::grpc::ClientContext* context, const ::RequestVoteRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_SayHello_;
+    const ::grpc::internal::RpcMethod rpcmethod_RequestVote_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -90,6 +113,7 @@ class RAFT final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status SayHello(::grpc::ServerContext* context, const ::HelloRequest* request, ::HelloReply* response);
+    virtual ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_SayHello : public BaseClass {
@@ -111,7 +135,27 @@ class RAFT final {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_SayHello<Service > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_RequestVote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_RequestVote() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_RequestVote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRequestVote(::grpc::ServerContext* context, ::RequestVoteRequest* request, ::grpc::ServerAsyncResponseWriter< ::RequestVoteReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_SayHello<WithAsyncMethod_RequestVote<Service > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SayHello : public BaseClass {
    private:
@@ -137,7 +181,32 @@ class RAFT final {
     }
     virtual void SayHello(::grpc::ServerContext* context, const ::HelloRequest* request, ::HelloReply* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
-  typedef ExperimentalWithCallbackMethod_SayHello<Service > ExperimentalCallbackService;
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_RequestVote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_RequestVote() {
+      ::grpc::Service::experimental().MarkMethodCallback(1,
+        new ::grpc::internal::CallbackUnaryHandler< ::RequestVoteRequest, ::RequestVoteReply>(
+          [this](::grpc::ServerContext* context,
+                 const ::RequestVoteRequest* request,
+                 ::RequestVoteReply* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->RequestVote(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_RequestVote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  typedef ExperimentalWithCallbackMethod_SayHello<ExperimentalWithCallbackMethod_RequestVote<Service > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_SayHello : public BaseClass {
    private:
@@ -151,6 +220,23 @@ class RAFT final {
     }
     // disable synchronous version of this method
     ::grpc::Status SayHello(::grpc::ServerContext* context, const ::HelloRequest* request, ::HelloReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_RequestVote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_RequestVote() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_RequestVote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -173,6 +259,26 @@ class RAFT final {
     }
     void RequestSayHello(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_RequestVote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_RequestVote() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_RequestVote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRequestVote(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -201,6 +307,31 @@ class RAFT final {
     virtual void SayHello(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_RequestVote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_RequestVote() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(1,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->RequestVote(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_RequestVote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void RequestVote(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_SayHello : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
@@ -220,9 +351,29 @@ class RAFT final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedSayHello(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::HelloRequest,::HelloReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_SayHello<Service > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_RequestVote : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_RequestVote() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler< ::RequestVoteRequest, ::RequestVoteReply>(std::bind(&WithStreamedUnaryMethod_RequestVote<BaseClass>::StreamedRequestVote, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_RequestVote() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedRequestVote(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::RequestVoteRequest,::RequestVoteReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_SayHello<WithStreamedUnaryMethod_RequestVote<Service > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SayHello<Service > StreamedService;
+  typedef WithStreamedUnaryMethod_SayHello<WithStreamedUnaryMethod_RequestVote<Service > > StreamedService;
 };
 
 
