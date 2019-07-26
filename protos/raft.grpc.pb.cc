@@ -20,6 +20,7 @@
 static const char* RAFT_method_names[] = {
   "/RAFT/SayHello",
   "/RAFT/RequestVote",
+  "/RAFT/AppendEntries",
 };
 
 std::unique_ptr< RAFT::Stub> RAFT::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -31,6 +32,7 @@ std::unique_ptr< RAFT::Stub> RAFT::NewStub(const std::shared_ptr< ::grpc::Channe
 RAFT::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_SayHello_(RAFT_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_RequestVote_(RAFT_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_AppendEntries_(RAFT_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status RAFT::Stub::SayHello(::grpc::ClientContext* context, const ::HelloRequest& request, ::HelloReply* response) {
@@ -73,6 +75,26 @@ void RAFT::Stub::experimental_async::RequestVote(::grpc::ClientContext* context,
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::RequestVoteReply>::Create(channel_.get(), cq, rpcmethod_RequestVote_, context, request, false);
 }
 
+::grpc::Status RAFT::Stub::AppendEntries(::grpc::ClientContext* context, const ::AppendEntriesRequest& request, ::AppendEntriesReply* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_AppendEntries_, context, request, response);
+}
+
+void RAFT::Stub::experimental_async::AppendEntries(::grpc::ClientContext* context, const ::AppendEntriesRequest* request, ::AppendEntriesReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_AppendEntries_, context, request, response, std::move(f));
+}
+
+void RAFT::Stub::experimental_async::AppendEntries(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::AppendEntriesReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_AppendEntries_, context, request, response, std::move(f));
+}
+
+::grpc::ClientAsyncResponseReader< ::AppendEntriesReply>* RAFT::Stub::AsyncAppendEntriesRaw(::grpc::ClientContext* context, const ::AppendEntriesRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::AppendEntriesReply>::Create(channel_.get(), cq, rpcmethod_AppendEntries_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::AppendEntriesReply>* RAFT::Stub::PrepareAsyncAppendEntriesRaw(::grpc::ClientContext* context, const ::AppendEntriesRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::AppendEntriesReply>::Create(channel_.get(), cq, rpcmethod_AppendEntries_, context, request, false);
+}
+
 RAFT::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       RAFT_method_names[0],
@@ -84,6 +106,11 @@ RAFT::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::RequestVoteRequest, ::RequestVoteReply>(
           std::mem_fn(&RAFT::Service::RequestVote), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      RAFT_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::AppendEntriesRequest, ::AppendEntriesReply>(
+          std::mem_fn(&RAFT::Service::AppendEntries), this)));
 }
 
 RAFT::Service::~Service() {
@@ -97,6 +124,13 @@ RAFT::Service::~Service() {
 }
 
 ::grpc::Status RAFT::Service::RequestVote(::grpc::ServerContext* context, const ::RequestVoteRequest* request, ::RequestVoteReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status RAFT::Service::AppendEntries(::grpc::ServerContext* context, const ::AppendEntriesRequest* request, ::AppendEntriesReply* response) {
   (void) context;
   (void) request;
   (void) response;

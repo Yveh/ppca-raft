@@ -220,15 +220,16 @@ const char descriptor_table_protodef_raft_2eproto[] =
   "Request\022\014\n\004term\030\001 \001(\005\022\023\n\013candidateId\030\002 \001"
   "(\t\022\024\n\014lastLogIndex\030\003 \001(\005\022\023\n\013lastLogTerm\030"
   "\004 \001(\005\"5\n\020RequestVoteReply\022\014\n\004term\030\001 \001(\005\022"
-  "\023\n\013voteGranted\030\002 \001(\0102i\n\004RAFT\022(\n\010SayHello"
-  "\022\r.HelloRequest\032\013.HelloReply\"\000\0227\n\013Reques"
-  "tVote\022\023.RequestVoteRequest\032\021.RequestVote"
-  "Reply\"\000b\006proto3"
+  "\023\n\013voteGranted\030\002 \001(\0102\250\001\n\004RAFT\022(\n\010SayHell"
+  "o\022\r.HelloRequest\032\013.HelloReply\"\000\0227\n\013Reque"
+  "stVote\022\023.RequestVoteRequest\032\021.RequestVot"
+  "eReply\"\000\022=\n\rAppendEntries\022\025.AppendEntrie"
+  "sRequest\032\023.AppendEntriesReply\"\000b\006proto3"
   ;
 ::google::protobuf::internal::DescriptorTable descriptor_table_raft_2eproto = {
   false, InitDefaults_raft_2eproto, 
   descriptor_table_protodef_raft_2eproto,
-  "raft.proto", &assign_descriptors_table_raft_2eproto, 535,
+  "raft.proto", &assign_descriptors_table_raft_2eproto, 599,
 };
 
 void AddDescriptors_raft_2eproto() {

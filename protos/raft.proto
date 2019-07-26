@@ -3,7 +3,7 @@ syntax = "proto3";
 service RAFT {
 	rpc SayHello (HelloRequest) returns (HelloReply) {}
 	rpc RequestVote (RequestVoteRequest) returns (RequestVoteReply) {}
-
+	rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesReply) {}
 }
 
 message HelloRequest {
