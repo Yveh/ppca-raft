@@ -14,9 +14,7 @@
 class Server {
 public:
 	Server(const std::string& filename) {
-//		std::cout << "read json from " << filename << std::endl;
 		boost::property_tree::ptree root;
-		boost::property_tree::ptree items;
 		boost::property_tree::read_json<boost::property_tree::ptree>(filename, root);
 
 		localAddress = root.get<std::string>("LocalAddress");
@@ -24,19 +22,11 @@ public:
 			serverList.emplace_back(adr.second.get_value<std::string>());
 		}
 		serverList.erase(remove(serverList.begin(), serverList.end(), localAddress), serverList.end());
-//		std::cout << "localAddress : " << localAddress << std::endl;
-//		for (auto i : serverList)
-//			std::cout << "Server " << i << std::endl;
 
 		for (auto i : serverList)
 			stub_[i] = RAFT::NewStub(grpc::CreateChannel(i, grpc::InsecureChannelCredentials()));
 
-		heartBeatTimeout = std::chrono::milliseconds(50);
-		electionTimeout = std::chrono::milliseconds(rand() % 150 + 150);
-
 		StoreStatus(STOP);
-		StoreVotedFor(std::string());
-		StoreCurrentTerm(0);
 	}
 	~Server() {
 		if (LoadStatus() != STOP)
@@ -64,8 +54,15 @@ public:
 		builder.RegisterService(&service_);
 		scq_ = builder.AddCompletionQueue();
 		server_ = builder.BuildAndStart();
+		StoreStatus(FOLLOWER);
+		heartBeatTimeout = std::chrono::milliseconds(200);
+		electionTimeout = std::chrono::milliseconds(rand() % 2000 + 2000);
+		std::cout << "Timeout = " << electionTimeout.count() << "ms" << std::endl;
+		StoreVotedFor("");
+		StoreCurrentTerm(0);
 
 		std::cout << "Server Start at " << localAddress << " with Election Timeout = " << electionTimeout.count() << std::endl;
+
 
 		//multi threads here
 		//caution: delete data
@@ -73,11 +70,9 @@ public:
 		new SayHelloCall(data_);
 		new RequestVoteCall(data_);
 		new AppendEntriesCall(data_);
-
 		thread__ = std::thread(&Server::HandleRpcs, this);
 		thread_ = std::thread(&Server::CompleteRpcs, this);
 
-		StoreStatus(FOLLOWER);
 		threadMain = std::thread(&Server::Main, this);
 	}
 	void ShutDown() {
@@ -109,17 +104,34 @@ private:
 	}
 	void HeartBeat() {
 		while (1) {
-
+			if (LoadStatus() != LEADER)
+				break;
+			for (auto channel : serverList) {
+				auto qwq = std::chrono::high_resolution_clock::now();
+				std::cout << localAddress << " Start HeartBeat term = " << currentTerm << " at " << qwq.time_since_epoch().count() << "ms" << std::endl;
+				AppendEntriesRequest request_;
+				request_.set_term(LoadCurrentTerm());
+				request_.set_leaderid(localAddress);
+				request_.set_prevlogindex(0);
+				request_.set_prevlogterm(0);
+				request_.set_leadercommit(0);
+				auto* receive_ = new AppendEntriesReceive(this);
+				receive_->response_reader_ = stub_[channel]->PrepareAsyncAppendEntries(&receive_->context_, request_, &ccq_);
+				receive_->response_reader_->StartCall();
+				receive_->response_reader_->Finish(&receive_->reply_, &receive_->status_, &receive_->proceed);
+			}
+			std::this_thread::sleep_for(heartBeatTimeout);
 		}
 	}
 	void Election() {
-		std::chrono::high_resolution_clock::duration elctionExtraTimeout = std::chrono::milliseconds(0);
-		lastElectionTimePoint = std::chrono::high_resolution_clock::now();
+		std::chrono::high_resolution_clock::duration electionExtraTimeout = std::chrono::milliseconds(0);
+		StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 		while (1) {
-			if (LoadStatus() == STOP && LoadStatus() == LEADER)
+			if (LoadStatus() != FOLLOWER && LoadStatus() != CANDIDATE)
 				break;
-			std::cout << localAddress << " Start Election term = " << currentTerm << std::endl;
-			lastElectionTimePoint = std::chrono::high_resolution_clock::now();
+			auto qwq = std::chrono::high_resolution_clock::now();
+			std::cout << localAddress << " Start Election term = " << currentTerm << " at " << qwq.time_since_epoch().count() << "ms" << std::endl;
+			StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 			StoreStatus(CANDIDATE);
 			mutexCurrentTerm.lock();
 			++currentTerm;
@@ -130,14 +142,22 @@ private:
 				RequestVoteRequest request_;
 				request_.set_term(LoadCurrentTerm());
 				request_.set_candidateid(localAddress);
-				request_.set_lastlogindex(lastLogIndex);
-				request_.set_lastlogterm(lastLogTerm);
+				request_.set_lastlogindex(0);
+				request_.set_lastlogterm(0);
 				auto* receive_ = new RequestVoteReceive(this);
 				receive_->response_reader_ = stub_[channel]->PrepareAsyncRequestVote(&receive_->context_, request_, &ccq_);
 				receive_->response_reader_->StartCall();
 				receive_->response_reader_->Finish(&receive_->reply_, &receive_->status_, &receive_->proceed);
 			}
-			std::this_thread::sleep_for(electionTimeout + elctionExtraTimeout);
+			electionTimeout = std::chrono::milliseconds(rand() % 2000 + 2000);
+			electionExtraTimeout = LoadLastElectionTimePoint() - std::chrono::high_resolution_clock::now();
+			assert(electionExtraTimeout < std::chrono::milliseconds(0));
+			while (electionTimeout + electionExtraTimeout > std::chrono::milliseconds(0)) {
+				std::cout << localAddress << " continue sleep for " << (electionTimeout + electionExtraTimeout).count() << "ms" << std::endl;
+				std::this_thread::sleep_for(electionTimeout + electionExtraTimeout);
+				electionTimeout = std::chrono::milliseconds(rand() % 2000 + 2000);
+				electionExtraTimeout = electionTimeout - (std::chrono::high_resolution_clock::now() - LoadLastElectionTimePoint());
+			}
 		}
 	}
 	void HandleRpcs() {
@@ -208,6 +228,13 @@ private:
 			if (status_.ok()) {
 				std::lock_guard<std::mutex> l1(who_->mutexVoteCnt);
 				std::lock_guard<std::mutex> l2(who_->mutexCurrentTerm);
+				if (reply_.term() > who_->currentTerm) {
+					who_->StoreStatus(FOLLOWER);
+					who_->currentTerm = reply_.term();
+					who_->votedFor = "";
+				}
+				if (who_->LoadStatus() != CANDIDATE)
+					return;
 				if (reply_.votegranted()) {
 					++who_->voteCnt;
 					std::cout << who_->localAddress << " now get " << who_->voteCnt << " votes. ";
@@ -216,11 +243,6 @@ private:
 						who_->StoreStatus(LEADER);
 					}
 				}
-				if (reply_.term() > who_->currentTerm) {
-					who_->currentTerm = reply_.term();
-					who_->StoreStatus(FOLLOWER);
-				}
-
 			}
 			else
 				std::cout << "RPC faild" << std::endl;
@@ -247,7 +269,15 @@ private:
 				return;
 			}
 			if (status_.ok()) {
-
+				std::lock_guard<std::mutex> l1(who_->mutexVoteCnt);
+				std::lock_guard<std::mutex> l2(who_->mutexCurrentTerm);
+				if (reply_.term() > who_->currentTerm) {
+					who_->StoreStatus(FOLLOWER);
+					who_->currentTerm = reply_.term();
+					who_->votedFor = "";
+				}
+				if (who_->LoadStatus() != LEADER)
+					return;
 			}
 			else
 				std::cout << "RPC faild" << std::endl;
@@ -326,17 +356,19 @@ private:
 
 					if (request_.term() < who_->currentTerm)
 						reply_.set_votegranted(false);
-					else if (request_.term() > who_->currentTerm) {
-						who_->StoreStatus(FOLLOWER);
-						who_->currentTerm = request_.term();
-						who_->votedFor = request_.candidateid();
-						reply_.set_votegranted(true);
-					}
-					else if (!who_->votedFor.empty() && who_->votedFor != request_.candidateid())
-						reply_.set_votegranted(false);
 					else {
-						who_->votedFor = request_.candidateid();
-						reply_.set_votegranted(true);
+						if (request_.term() > who_->currentTerm) {
+							who_->StoreStatus(FOLLOWER);
+							who_->currentTerm = request_.term();
+							who_->votedFor = "";
+						}
+						if (who_->votedFor.empty() || who_->votedFor == request_.candidateid()) {
+							who_->votedFor = request_.candidateid();
+							reply_.set_votegranted(true);
+						}
+						else {
+							reply_.set_votegranted(false);
+						}
 					}
 					reply_.set_term(who_->currentTerm);
 					responder_.Finish(reply_, grpc::Status::OK, &proceed);
@@ -369,7 +401,7 @@ private:
 		}
 		void Proceed(bool ok) override {
 			switch (status_) {
-				case PROCESS:
+				case PROCESS: {
 					if (!ok) {
 						delete this;
 						break;
@@ -377,10 +409,15 @@ private:
 					new AppendEntriesCall(data_);
 					status_ = FINISH;
 
-					//
+					std::lock_guard<std::mutex> l2(who_->mutexCurrentTerm);
+
+					reply_.set_term(who_->currentTerm);
+					reply_.set_success(true);
+					who_->StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 
 					responder_.Finish(reply_, grpc::Status::OK, &proceed);
 					break;
+				}
 				case FINISH:
 					delete this;
 					break;
@@ -416,7 +453,15 @@ private:
 	int currentTerm, lastApplied, lastLogIndex, lastLogTerm, voteCnt;
 	std::string votedFor;
 
-	std::mutex mutexStatus, mutexVoteCnt, mutexCurrentTerm, mutexVotedFor;
+	std::mutex mutexStatus, mutexVoteCnt, mutexCurrentTerm, mutexVotedFor, mutexLastElectionTimePoint;
+	std::chrono::high_resolution_clock::time_point LoadLastElectionTimePoint() {
+		std::lock_guard<std::mutex> l(mutexLastElectionTimePoint);
+		return lastElectionTimePoint;
+	}
+	void StoreLastElectionTimePoint(std::chrono::high_resolution_clock::time_point lastElectionTimePoint_) {
+		std::lock_guard<std::mutex> l(mutexLastElectionTimePoint);
+		lastElectionTimePoint = lastElectionTimePoint_;
+	}
 	Status_t LoadStatus() {
 		std::lock_guard<std::mutex> l(mutexStatus);
 		return status;
@@ -455,9 +500,13 @@ int main() {
 	Server s1("s1.json");
 	Server s2("s2.json");
 	Server s3("s3.json");
+//	Server s4("s4.json");
+//	Server s5("s5.json");
 	s1.StartUp();
 	s2.StartUp();
 	s3.StartUp();
+//	s4.StartUp();
+//	s5.StartUp();
 	while (1);
 //	s1.ShutDown();
 //	s2.ShutDown();
