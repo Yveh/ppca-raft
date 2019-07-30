@@ -86,77 +86,88 @@ public:
 	}
 private:
 	void Main() {
-		while (1) {
-			switch (LoadStatus()) {
-			case FOLLOWER: case CANDIDATE:
-				threadTimer = std::thread(&Server::Election, this);
-				threadTimer.join();
-				break;
-			case LEADER:
-				threadTimer = std::thread(&Server::HeartBeat, this);
-				threadTimer.join();
-				break;
-			case STOP:
-				return;
-			}
-		}
-
+		threadElection = std::thread(&Server::Election, this);
+		threadHeartBeat = std::thread(&Server::HeartBeat, this);
+		threadElection.join();
+		threadHeartBeat.join();
 	}
 	void HeartBeat() {
 		while (1) {
-			if (LoadStatus() != LEADER)
+			std::unique_lock<std::mutex> l0(mutexStatus);
+			condHeartBeat.wait(l0, [this]{return status == LEADER || status == STOP;});
+			l0.unlock();
+			if (LoadStatus() == STOP)
 				break;
-			for (auto channel : serverList) {
+			while (1) {
 				auto qwq = std::chrono::high_resolution_clock::now();
-				std::cout << localAddress << " Start HeartBeat term = " << currentTerm << " at " << qwq.time_since_epoch().count() << "ms" << std::endl;
-				AppendEntriesRequest request_;
-				request_.set_term(LoadCurrentTerm());
-				request_.set_leaderid(localAddress);
-				request_.set_prevlogindex(0);
-				request_.set_prevlogterm(0);
-				request_.set_leadercommit(0);
-				auto* receive_ = new AppendEntriesReceive(this);
-				receive_->response_reader_ = stub_[channel]->PrepareAsyncAppendEntries(&receive_->context_, request_, &ccq_);
-				receive_->response_reader_->StartCall();
-				receive_->response_reader_->Finish(&receive_->reply_, &receive_->status_, &receive_->proceed);
+				std::cout << localAddress << " Start HeartBeat term = " << currentTerm << " at "
+						  << qwq.time_since_epoch().count() << "ms" << std::endl;
+				for (auto channel : serverList) {
+					AppendEntriesRequest request_;
+					request_.set_term(LoadCurrentTerm());
+					request_.set_leaderid(localAddress);
+					request_.set_prevlogindex(0);
+					request_.set_prevlogterm(0);
+					request_.set_leadercommit(0);
+					auto *receive_ = new AppendEntriesReceive(this);
+					receive_->response_reader_ = stub_[channel]->PrepareAsyncAppendEntries(&receive_->context_,
+																						   request_, &ccq_);
+					receive_->response_reader_->StartCall();
+					receive_->response_reader_->Finish(&receive_->reply_, &receive_->status_, &receive_->proceed);
+				}
+				std::unique_lock<std::mutex> l0(mutexStatus);
+				condHeartBeat.wait_for(l0, heartBeatTimeout, [this]{return status != LEADER;});
+				l0.unlock();
+				if (LoadStatus() != LEADER)
+					break;
 			}
-			std::this_thread::sleep_for(heartBeatTimeout);
 		}
 	}
 	void Election() {
-		std::chrono::high_resolution_clock::duration electionExtraTimeout = std::chrono::milliseconds(0);
-		StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 		while (1) {
-			if (LoadStatus() != FOLLOWER && LoadStatus() != CANDIDATE)
+			std::unique_lock<std::mutex> l0(mutexStatus);
+			condElection.wait(l0, [this]{return status == FOLLOWER || status == CANDIDATE || status == STOP;});
+			l0.unlock();
+			if (LoadStatus() == STOP)
 				break;
+			std::chrono::high_resolution_clock::duration electionExtraTimeout = std::chrono::milliseconds(0);
+			StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 			auto qwq = std::chrono::high_resolution_clock::now();
 			std::cout << localAddress << " Start Election term = " << currentTerm << " at " << qwq.time_since_epoch().count() << "ms" << std::endl;
-			StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
-			StoreStatus(CANDIDATE);
-			mutexCurrentTerm.lock();
-			++currentTerm;
-			mutexCurrentTerm.unlock();
-			StoreVoteCnt(1);
-			StoreVotedFor(localAddress);
-			for (auto channel : serverList) {
-				RequestVoteRequest request_;
-				request_.set_term(LoadCurrentTerm());
-				request_.set_candidateid(localAddress);
-				request_.set_lastlogindex(0);
-				request_.set_lastlogterm(0);
-				auto* receive_ = new RequestVoteReceive(this);
-				receive_->response_reader_ = stub_[channel]->PrepareAsyncRequestVote(&receive_->context_, request_, &ccq_);
-				receive_->response_reader_->StartCall();
-				receive_->response_reader_->Finish(&receive_->reply_, &receive_->status_, &receive_->proceed);
-			}
-			electionTimeout = std::chrono::milliseconds(rand() % 2000 + 2000);
-			electionExtraTimeout = LoadLastElectionTimePoint() - std::chrono::high_resolution_clock::now();
-			assert(electionExtraTimeout < std::chrono::milliseconds(0));
-			while (electionTimeout + electionExtraTimeout > std::chrono::milliseconds(0)) {
-				std::cout << localAddress << " continue sleep for " << (electionTimeout + electionExtraTimeout).count() << "ms" << std::endl;
-				std::this_thread::sleep_for(electionTimeout + electionExtraTimeout);
+			while (1) {
+				StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
+				StoreStatus(CANDIDATE);
+				mutexCurrentTerm.lock();
+				++currentTerm;
+				mutexCurrentTerm.unlock();
+				StoreVoteCnt(1);
+				StoreVotedFor(localAddress);
+				for (auto channel : serverList) {
+					RequestVoteRequest request_;
+					request_.set_term(LoadCurrentTerm());
+					request_.set_candidateid(localAddress);
+					request_.set_lastlogindex(0);
+					request_.set_lastlogterm(0);
+					auto* receive_ = new RequestVoteReceive(this);
+					receive_->response_reader_ = stub_[channel]->PrepareAsyncRequestVote(&receive_->context_, request_, &ccq_);
+					receive_->response_reader_->StartCall();
+					receive_->response_reader_->Finish(&receive_->reply_, &receive_->status_, &receive_->proceed);
+				}
 				electionTimeout = std::chrono::milliseconds(rand() % 2000 + 2000);
-				electionExtraTimeout = electionTimeout - (std::chrono::high_resolution_clock::now() - LoadLastElectionTimePoint());
+				electionExtraTimeout = LoadLastElectionTimePoint() - std::chrono::high_resolution_clock::now();
+				assert(electionExtraTimeout < std::chrono::milliseconds(0));
+				while (electionTimeout + electionExtraTimeout > std::chrono::milliseconds(0)) {
+					std::cout << localAddress << " continue sleep for " << (electionTimeout + electionExtraTimeout).count() << "ms" << std::endl;
+					std::unique_lock<std::mutex> l0(mutexStatus);
+					condElection.wait_for(l0, electionTimeout + electionExtraTimeout, [this]{return status != FOLLOWER && status != CANDIDATE;});
+					l0.unlock();
+					if (LoadStatus() != CANDIDATE && LoadStatus() != FOLLOWER)
+						break;
+					electionTimeout = std::chrono::milliseconds(rand() % 2000 + 2000);
+					electionExtraTimeout = electionTimeout - (std::chrono::high_resolution_clock::now() - LoadLastElectionTimePoint());
+				}
+				if (LoadStatus() != CANDIDATE && LoadStatus() != FOLLOWER)
+					break;
 			}
 		}
 	}
@@ -436,7 +447,7 @@ private:
 		CallStatus status_;
 	};
 
-	std::thread thread_, thread__, threadMain, threadTimer;
+	std::thread thread_, thread__, threadMain, threadHeartBeat, threadElection;
 	CallData* data_;
 	std::shared_ptr<grpc::Server> server_;
 	std::shared_ptr<grpc::ServerCompletionQueue> scq_;
@@ -454,6 +465,8 @@ private:
 	std::string votedFor;
 
 	std::mutex mutexStatus, mutexVoteCnt, mutexCurrentTerm, mutexVotedFor, mutexLastElectionTimePoint;
+	std::condition_variable condHeartBeat, condElection;
+
 	std::chrono::high_resolution_clock::time_point LoadLastElectionTimePoint() {
 		std::lock_guard<std::mutex> l(mutexLastElectionTimePoint);
 		return lastElectionTimePoint;
@@ -468,6 +481,8 @@ private:
 	}
 	void StoreStatus(const Status_t& status_) {
 		std::lock_guard<std::mutex> l(mutexStatus);
+		condElection.notify_one();
+		condHeartBeat.notify_one();
 		status = status_;
 	}
 	int LoadVoteCnt() {
@@ -500,17 +515,17 @@ int main() {
 	Server s1("s1.json");
 	Server s2("s2.json");
 	Server s3("s3.json");
-//	Server s4("s4.json");
-//	Server s5("s5.json");
+	Server s4("s4.json");
+	Server s5("s5.json");
 	s1.StartUp();
 	s2.StartUp();
 	s3.StartUp();
-//	s4.StartUp();
-//	s5.StartUp();
+	s4.StartUp();
+	s5.StartUp();
 	while (1);
-//	s1.ShutDown();
-//	s2.ShutDown();
-//	s3.ShutDown();
+	s1.ShutDown();
+	s2.ShutDown();
+	s3.ShutDown();
 	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	return 0;
 }

@@ -4,6 +4,8 @@ service RAFT {
 	rpc SayHello (HelloRequest) returns (HelloReply) {}
 	rpc RequestVote (RequestVoteRequest) returns (RequestVoteReply) {}
 	rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesReply) {}
+	rpc Put (PutRequest) returns (PutReply) {}
+	rpc Get (GetRequest) returns (GetReply) {}
 }
 
 message HelloRequest {
@@ -38,4 +40,22 @@ message RequestVoteRequest {
 message RequestVoteReply {
 	int32 term = 1;
 	bool voteGranted = 2;
+}
+
+message PutRequest {
+	string key = 1;
+	string value = 2;
+}
+
+message PutReply {
+	bool success = 1;
+}
+
+message GetRequest {
+	string key = 1;
+}
+
+message GetReply {
+	bool success = 1;
+	string value = 2;
 }
