@@ -11,8 +11,7 @@
 #include <protos/raft.pb.h>
 #include <raft.pb.h>
 #include "protos/raft.grpc.pb.h"
-//TODO： Leader：比较matchIndex 更新commitIndex
-//TODO: Client返回直到commit后才执行
+
 class Server {
 public:
 	Server(const std::string& filename) {
@@ -47,16 +46,6 @@ public:
 		if (threadMain.joinable())
 			threadMain.join();
 	}
-	void SayHello(const std::string& channel, const std::string& user) {
-		HelloRequest request;
-		request.set_name(user);
-
-		auto* receive = new SayHelloReceive(this);
-
-		receive->response_reader_ = stub_[channel]->PrepareAsyncSayHello(&receive->context_, request, &ccq_);
-		receive->response_reader_->StartCall();
-		receive->response_reader_->Finish(&receive->reply_, &receive->status_, &receive->proceed);
-	}
 	void StartUp() {
 		grpc::ServerBuilder builder;
 		builder.AddListeningPort(localAddress, grpc::InsecureServerCredentials());
@@ -66,14 +55,12 @@ public:
 
 		status = FOLLOWER;
 
-		std::cout << "electionTimeout = " << electionTimeout.count() << "ms" << std::endl;
-		std::cout << "Server Start at " << localAddress << " with Election Timeout = " << electionTimeout.count() << std::endl;
+		std::cout << "Server Start at " << localAddress << std::endl;
 
 
 		//multi threads here
 		//caution: delete data
 		data_ = new CallData(&service_, scq_.get(), this);
-		new SayHelloCall(data_);
 		new PutCall(data_);
 		new GetCall(data_);
 		new RequestVoteCall(data_);
@@ -115,7 +102,6 @@ private:
 				++lastApplied;
 				condGet.notify_all();
 				mutexLastApplied.unlock();
-				std::cout << localAddress << " applied " << lastApplied << std::endl;
 				mutexLog.lock();
 				mutexDataBase.lock();
 				dataBase[std::get<1>(log[lastApplied])] = std::get<2>(log[lastApplied]);
@@ -132,10 +118,6 @@ private:
 			if (LoadStatus() == STOP)
 				break;
 			while (1) {
-				std::cout << localAddress << " Start HeartBeat term = " << LoadCurrentTerm() << " at "
-						  << std::chrono::high_resolution_clock::now().time_since_epoch().count() << "ms" << std::endl;
-
-				//major match
 				mutexMatchIndex.lock();
 				mutexCommitIndex.lock();
 				int tmpCnt = 0;
@@ -146,7 +128,6 @@ private:
 				if (tmpCnt >= serverList.size() / 2) {
 					++commitIndex;
 					condApply.notify_all();
-					std::cout << localAddress << " commitIndex = " << commitIndex << std::endl;
 				}
 				mutexMatchIndex.unlock();
 				mutexCommitIndex.unlock();
@@ -172,7 +153,6 @@ private:
 						entry->set_key(std::get<1>(log[nextIndex[channel]]));
 						entry->set_value(std::get<2>(log[nextIndex[channel]]));
 						mutexLog.unlock();
-						std::cout << localAddress << " send entry to " << channel << " index = " << nextIndex[channel] << std::endl;
 					}
 					mutexNextIndex.unlock();
 
@@ -201,7 +181,6 @@ private:
 			StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 			while (1) {
 				auto qwq = std::chrono::high_resolution_clock::now();
-				std::cout << localAddress << " Start Election term = " << LoadCurrentTerm() << " at " << qwq.time_since_epoch().count() << "ms" << std::endl;
 
 				StoreLastElectionTimePoint(std::chrono::high_resolution_clock::now());
 				StoreStatus(CANDIDATE);
@@ -231,7 +210,6 @@ private:
 				electionExtraTimeout = LoadLastElectionTimePoint() - std::chrono::high_resolution_clock::now();
 				assert(electionExtraTimeout < std::chrono::milliseconds(0));
 				while (electionTimeout + electionExtraTimeout > std::chrono::milliseconds(0)) {
-					std::cout << localAddress << " continue sleep for " << (electionTimeout + electionExtraTimeout).count() << "ms" << std::endl;
 					std::unique_lock<std::mutex> l1(mutexStatus);
 					condElection.wait_for(l1, electionTimeout + electionExtraTimeout, [this]{return status != FOLLOWER && status != CANDIDATE;});
 					l1.unlock();
@@ -266,32 +244,6 @@ private:
 		virtual void Proceed(bool ok) = 0;
 	};
 
-	class SayHelloReceive final : public Receive {
-	public:
-		explicit SayHelloReceive(Server* who) : who_(who) {
-			proceed = [&](bool ok) { Proceed(ok); };
-		}
-		std::function<void(bool)> proceed;
-
-		grpc::ClientContext context_;
-		HelloReply reply_;
-		grpc::Status status_;
-		std::unique_ptr<grpc::ClientAsyncResponseReader<HelloReply>> response_reader_;
-		Server* who_;
-
-		void Proceed(bool ok) override {
-			if (!ok) {
-				delete this;
-				return;
-			}
-			if (status_.ok())
-				std::cout << "received: " << reply_.message() << std::endl;
-			else
-				std::cout << "RPC faild" << std::endl;
-			delete this;
-		}
-	};
-
 	class RequestVoteReceive final : public Receive {
 	public:
 		explicit RequestVoteReceive(Server *who) : who_(who){
@@ -321,9 +273,8 @@ private:
 				if (reply_.votegranted()) {
 					who_->mutexVoteCnt.lock();
 					++who_->voteCnt;
-					std::cout << who_->localAddress << " now get " << who_->voteCnt << " votes. ";
 					if (who_->voteCnt > who_->serverList.size() / 2) {
-						std::cout << who_->localAddress << who_->localAddress << " is Leader" << std::endl;
+						std::cout << who_->localAddress << " is Leader term = " << who_->LoadCurrentTerm() << std::endl;
 						who_->StoreStatus(LEADER);
 					}
 					who_->mutexVoteCnt.unlock();
@@ -392,42 +343,6 @@ private:
 		virtual void Proceed(bool ok) = 0;
 	};
 
-	class SayHelloCall final : public Call {
-	public:
-		explicit SayHelloCall(CallData* data)
-				: data_(data), responder_(&ctx_), status_(PROCESS), who_(data->who_) {
-			proceed = [&](bool ok) { Proceed(ok); };
-			data_->service_->RequestSayHello(&ctx_, &request_, &responder_, data_->cq_, data_->cq_, &proceed);
-		}
-		void Proceed(bool ok) override {
-			switch (status_) {
-				case PROCESS:
-					if (!ok) {
-						delete this;
-						break;
-					}
-					new SayHelloCall(data_);
-					status_ = FINISH;
-					reply_.set_message("Hello " + request_.name());
-					responder_.Finish(reply_, grpc::Status::OK, &proceed);
-					break;
-				case FINISH:
-					delete this;
-					break;
-			}
-		}
-		std::function<void(bool)> proceed;
-	private:
-		Server* who_;
-		CallData* data_;
-		HelloRequest request_;
-		HelloReply reply_;
-		grpc::ServerContext ctx_;
-		grpc::ServerAsyncResponseWriter<HelloReply> responder_;
-		enum CallStatus {PROCESS, FINISH};
-		CallStatus status_;
-	};
-
 	class PutCall final : public Call {
 	public:
 		explicit PutCall(CallData* data)
@@ -440,7 +355,6 @@ private:
 			switch (status_) {
 				case PROCESS:
 					if (!ok) {
-						puts("deleted");
 						delete this;
 						break;
 					}
@@ -456,10 +370,8 @@ private:
 						writeIndex = who_->log.size();
 						who_->log.emplace_back(who_->LoadCurrentTerm(), request_.key(), request_.value());
 						who_->mutexLog.unlock();
-						std::cout << "writeIndex = " << writeIndex << std::endl;
 						std::unique_lock<std::mutex> l(who_->mutexCommitIndex);
 						who_->condApply.wait(l, [this] {return who_->commitIndex >= writeIndex; });
-						std::cout << "commitIndex = " << who_->commitIndex << std::endl;
 						l.unlock();
 						reply_.set_success(true);
 					}
@@ -625,7 +537,6 @@ private:
 						if (request_.entries_size()) {
 							who_->mutexLog.lock();
 							if (who_->log.size() - 1 < request_.prevlogindex() || std::get<0>(who_->log[request_.prevlogindex()]) != request_.prevlogterm()) {
-								std::cout << std::get<0>(who_->log[request_.prevlogindex()]) << " "  << request_.prevlogterm() << std::endl;
 								reply_.set_success(false);
 							}
 							else {
@@ -644,7 +555,6 @@ private:
 						if (request_.leadercommit() > who_->LoadCommitIndex()) {
 							who_->StoreCommitIndex(std::min(int(request_.leadercommit()), int(who_->log.size() - 1)));
 							who_->condApply.notify_all();
-							std::cout << who_->localAddress << " commitIndex  = " << int(request_.leadercommit()) << std::endl;
 						}
 					}
 
@@ -750,24 +660,3 @@ private:
 		return lastApplied;
 	}
 };
-
-int main() {
-	Server s1("s1.json");
-	Server s2("s2.json");
-	Server s3("s3.json");
-	Server s4("s4.json");
-	Server s5("s5.json");
-	s1.StartUp();
-	s2.StartUp();
-	s3.StartUp();
-	s4.StartUp();
-	s5.StartUp();
-//	while (1);
-//	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-//	s1.ShutDown();
-//	s2.ShutDown();
-//	s3.ShutDown();
-	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	while (1);
-	return 0;
-}

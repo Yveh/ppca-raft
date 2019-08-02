@@ -3,6 +3,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <random>
 #include <map>
 
 #include <boost/property_tree/ptree.hpp>
@@ -23,21 +24,6 @@ public:
 
 		for (auto i : serverList)
 			stub_[i] = RAFT::NewStub(grpc::CreateChannel(i, grpc::InsecureChannelCredentials()));
-	}
-	std::string SayHello(std::string channel, std::string user) {
-		HelloRequest request_;
-		request_.set_name(user);
-		HelloReply reply_;
-		grpc::ClientContext context_;
-		grpc::Status status_ = stub_[channel]->SayHello(&context_, request_, &reply_);
-		if (status_.ok()) {
-			return reply_.message();
-		}
-		else {
-			std::cout << status_.error_code() << ": " << status_.error_message()
-					  << std::endl;
-			return "RPC failed";
-		}
 	}
 	void Put(std::string key, std::string value) {
 		while (1) {
@@ -72,32 +58,3 @@ private:
 	std::vector<std::string> serverList;
 	std::map<std::string, std::unique_ptr<RAFT::Stub>> stub_;
 };
-
-int main() {
-	Client c1("c1.json");
-//	c1.Put("x", "1");
-//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//	c1.Put("y", "2");
-//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//	c1.Put("z", "3");
-//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//	c1.Get("x");
-	std::string str1, str2, opt;
-	while (1) {
-		std::cin >> opt;
-		if (opt == "put") {
-			std::cin >> str1 >> str2;
-			c1.Put(str1, str2);
-			std::cout << "commited" << std::endl;
-		}
-		else if (opt == "get"){
-			std::cin >> str1;
-			str2 = c1.Get(str1);
-			std::cout << "value = " << (str2.empty() ? "None" : str2) << std::endl;
-		}
-		else {
-			std::cout << "command error!" << std::endl;
-		}
-	}
-	return 0;
-}
