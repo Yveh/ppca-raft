@@ -21,6 +21,8 @@ static const char* RAFT_method_names[] = {
   "/RAFT/SayHello",
   "/RAFT/RequestVote",
   "/RAFT/AppendEntries",
+  "/RAFT/Put",
+  "/RAFT/Get",
 };
 
 std::unique_ptr< RAFT::Stub> RAFT::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -33,6 +35,8 @@ RAFT::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_SayHello_(RAFT_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_RequestVote_(RAFT_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_AppendEntries_(RAFT_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Put_(RAFT_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Get_(RAFT_method_names[4], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status RAFT::Stub::SayHello(::grpc::ClientContext* context, const ::HelloRequest& request, ::HelloReply* response) {
@@ -95,6 +99,46 @@ void RAFT::Stub::experimental_async::AppendEntries(::grpc::ClientContext* contex
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::AppendEntriesReply>::Create(channel_.get(), cq, rpcmethod_AppendEntries_, context, request, false);
 }
 
+::grpc::Status RAFT::Stub::Put(::grpc::ClientContext* context, const ::PutRequest& request, ::PutReply* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Put_, context, request, response);
+}
+
+void RAFT::Stub::experimental_async::Put(::grpc::ClientContext* context, const ::PutRequest* request, ::PutReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Put_, context, request, response, std::move(f));
+}
+
+void RAFT::Stub::experimental_async::Put(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::PutReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Put_, context, request, response, std::move(f));
+}
+
+::grpc::ClientAsyncResponseReader< ::PutReply>* RAFT::Stub::AsyncPutRaw(::grpc::ClientContext* context, const ::PutRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::PutReply>::Create(channel_.get(), cq, rpcmethod_Put_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::PutReply>* RAFT::Stub::PrepareAsyncPutRaw(::grpc::ClientContext* context, const ::PutRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::PutReply>::Create(channel_.get(), cq, rpcmethod_Put_, context, request, false);
+}
+
+::grpc::Status RAFT::Stub::Get(::grpc::ClientContext* context, const ::GetRequest& request, ::GetReply* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Get_, context, request, response);
+}
+
+void RAFT::Stub::experimental_async::Get(::grpc::ClientContext* context, const ::GetRequest* request, ::GetReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Get_, context, request, response, std::move(f));
+}
+
+void RAFT::Stub::experimental_async::Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::GetReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Get_, context, request, response, std::move(f));
+}
+
+::grpc::ClientAsyncResponseReader< ::GetReply>* RAFT::Stub::AsyncGetRaw(::grpc::ClientContext* context, const ::GetRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::GetReply>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::GetReply>* RAFT::Stub::PrepareAsyncGetRaw(::grpc::ClientContext* context, const ::GetRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::GetReply>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, false);
+}
+
 RAFT::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       RAFT_method_names[0],
@@ -111,6 +155,16 @@ RAFT::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::AppendEntriesRequest, ::AppendEntriesReply>(
           std::mem_fn(&RAFT::Service::AppendEntries), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      RAFT_method_names[3],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::PutRequest, ::PutReply>(
+          std::mem_fn(&RAFT::Service::Put), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      RAFT_method_names[4],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< RAFT::Service, ::GetRequest, ::GetReply>(
+          std::mem_fn(&RAFT::Service::Get), this)));
 }
 
 RAFT::Service::~Service() {
@@ -131,6 +185,20 @@ RAFT::Service::~Service() {
 }
 
 ::grpc::Status RAFT::Service::AppendEntries(::grpc::ServerContext* context, const ::AppendEntriesRequest* request, ::AppendEntriesReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status RAFT::Service::Put(::grpc::ServerContext* context, const ::PutRequest* request, ::PutReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status RAFT::Service::Get(::grpc::ServerContext* context, const ::GetRequest* request, ::GetReply* response) {
   (void) context;
   (void) request;
   (void) response;

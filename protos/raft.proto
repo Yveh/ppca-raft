@@ -16,18 +16,26 @@ message HelloReply {
 	string message = 1;
 }
 
+message Entry {
+	int32 term = 1;
+	string key = 2;
+	string value = 3;
+}
+
 message AppendEntriesRequest {
 	int32 term = 1;
 	string leaderId = 2;
 	int32 prevLogIndex = 3;
 	int32 prevLogTerm = 4;
-	repeated string entries = 5;
+	repeated Entry entries = 5;
 	int32 leaderCommit = 6;
 }
 
 message AppendEntriesReply {
 	int32 term = 1;
 	bool success = 2;
+	string receiver = 3;
+	int32 cnt = 4;
 }
 
 message RequestVoteRequest {
