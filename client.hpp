@@ -16,7 +16,7 @@ class Client {
 public:
 	explicit Client(std::string filename) {
 		boost::property_tree::ptree root;
-		boost::property_tree::read_json<boost::property_tree::ptree>(filename, root);
+		boost::property_tree::read_json<boost::property_tree::ptree>("configs/" + filename, root);
 
 		for (auto &&adr : root.get_child("ServerList")) {
 			serverList.emplace_back(adr.second.get_value<std::string>());
@@ -32,12 +32,13 @@ public:
 			request_.set_value(value);
 			PutReply reply_;
 			grpc::ClientContext context_;
+			context_.set_deadline(std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(200));
 			grpc::Status status_ = stub_[serverList[rand() % serverList.size()]]->Put(&context_, request_, &reply_);
 			if (status_.ok() && reply_.success()) {
 				break;
 			}
-			else
-				std::cout << ".";
+//			else
+//				std::cout << ".";
 		}
 	}
 	std::string Get(std::string key) {
@@ -46,12 +47,13 @@ public:
 			request_.set_key(key);
 			GetReply reply_;
 			grpc::ClientContext context_;
+			context_.set_deadline(std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(200));
 			grpc::Status status_ = stub_[serverList[rand() % serverList.size()]]->Get(&context_, request_, &reply_);
 			if (status_.ok() && reply_.success()) {
 				return reply_.value();
 			}
-			else
-				std::cout << ".";
+//			else
+//				std::cout << ".";
 		}
 	}
 private:
